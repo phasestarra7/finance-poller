@@ -1,16 +1,64 @@
 {
   "name": "financepoller",
   "version": "0.1.0",
+  "productName": "Finance Poller",
   "description": "Tray-resident Yahoo Finance polling app built with Electron.",
+  "author": "phasestarr",
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
-    "check": "node --check src/main/main.js && node --check src/main/store.js && node --check src/main/quote-provider.js && node --check src/main/preload.js && node --check src/renderer/app.js"
+    "check": "node --check build/after-pack.js && node --check src/main/main.js && node --check src/main/store.js && node --check src/main/quote-provider.js && node --check src/main/preload.js && node --check src/renderer/app.js",
+    "pack:win": "electron-builder --dir --win nsis",
+    "dist:win": "electron-builder --win nsis"
   },
   "dependencies": {
     "yahoo-finance2": "3.13.2"
   },
   "devDependencies": {
-    "electron": "40.8.0"
+    "electron": "40.8.0",
+    "electron-builder": "26.8.0"
+  },
+  "build": {
+    "appId": "com.phasestarr.financepoller",
+    "artifactName": "FinancePoller-${version}-${arch}.${ext}",
+    "asar": true,
+    "afterPack": "build/after-pack.js",
+    "toolsets": {
+      "winCodeSign": "1.1.0"
+    },
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": false,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Finance Poller",
+      "uninstallDisplayName": "Finance Poller",
+      "installerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "deleteAppDataOnUninstall": false
+    }
   }
 }

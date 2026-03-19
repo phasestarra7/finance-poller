@@ -4,7 +4,7 @@ const { app, BrowserWindow, ipcMain, Menu, Notification, Tray, nativeImage } = r
 const { YahooQuoteProvider } = require("./quote-provider");
 const { AppStore, normalizeSymbol } = require("./store");
 
-const APP_ID = "financepoller.desktop";
+const APP_ID = "com.phasestarr.financepoller";
 const MAX_WIDGETS = 12;
 const POLL_INTERVAL_MS = 15_000;
 const DEFAULT_BOUNDS = {
@@ -23,15 +23,28 @@ let pollInFlight = false;
 const runtimeWidgets = new Map();
 let hasAppliedInitialWindowSize = false;
 
-function createTrayIconDataUrl() {
-  const svg = `
+function resolveAssetPath(...segments) {
+  return path.join(app.getAppPath(), ...segments);
+}
+
+function loadAppIcon() {
+  const iconPath = resolveAssetPath("build", "icon.png");
+  const icon = nativeImage.createFromPath(iconPath);
+
+  if (!icon.isEmpty()) {
+    return icon;
+  }
+
+  const fallbackSvg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
       <rect x="10" y="9" width="44" height="46" rx="12" fill="#080808" stroke="#f5f5f5" stroke-width="4"/>
       <path d="M22 32h20M32 22v20" stroke="#f5f5f5" stroke-width="4" stroke-linecap="round"/>
     </svg>
   `;
 
-  return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+  return nativeImage.createFromDataURL(
+    `data:image/svg+xml;base64,${Buffer.from(fallbackSvg).toString("base64")}`
+  );
 }
 
 function getRuntime(widgetId) {
@@ -93,6 +106,7 @@ function createWindow() {
     fullscreenable: false,
     show: false,
     backgroundColor: "#050505",
+    icon: resolveAssetPath("build", "icon.png"),
     skipTaskbar: shouldStartHidden,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -167,9 +181,12 @@ function hideWindowToTray() {
 }
 
 function createTray() {
-  const icon = nativeImage.createFromDataURL(createTrayIconDataUrl());
+  const icon = loadAppIcon().resize({
+    width: 18,
+    height: 18,
+  });
   tray = new Tray(icon);
-  tray.setToolTip("Poller");
+  tray.setToolTip("Finance Poller");
   tray.setContextMenu(
     Menu.buildFromTemplate([
       {
