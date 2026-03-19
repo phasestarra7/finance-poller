@@ -1,0 +1,16 @@
+{
+  "name": "financepoller",
+  "version": "0.1.0",
+  "description": "Tray-resident Yahoo Finance polling app built with Electron.",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "check": "node --check src/main/main.js && node --check src/main/store.js && node --check src/main/quote-provider.js && node --check src/main/preload.js && node --check src/renderer/app.js"
+  },
+  "dependencies": {
+    "yahoo-finance2": "3.13.2"
+  },
+  "devDependencies": {
+    "electron": "40.8.0"
+  }
+}

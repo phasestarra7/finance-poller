@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance Poller</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="chrome">
+        <div class="chrome__drag-zone" aria-hidden="true"></div>
+        <div class="chrome__title">Finance Poller</div>
+        <div class="chrome__actions">
+          <button class="window-button" id="minimizeButton" title="트레이로 숨기기" type="button">_</button>
+          <button class="window-button window-button--danger" id="closeButton" title="앱 종료" type="button">
+            ×
+          </button>
+        </div>
+      </header>
+
+      <main class="board-frame">
+        <section class="widgets-board" id="widgetsBoard"></section>
+      </main>
+    </div>
+
+    <template id="loadingTemplate">
+      <div class="empty-state">로딩 중...</div>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
