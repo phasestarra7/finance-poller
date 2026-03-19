@@ -51,6 +51,7 @@
       "oneClick": true,
       "perMachine": false,
       "allowToChangeInstallationDirectory": false,
+      "include": "build/installer.nsh",
       "createDesktopShortcut": false,
       "createStartMenuShortcut": true,
       "shortcutName": "Finance Poller",
@@ -58,7 +59,7 @@
       "installerIcon": "build/icon.ico",
       "installerHeaderIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico",
-      "deleteAppDataOnUninstall": false
+      "deleteAppDataOnUninstall": true
     }
   }
 }

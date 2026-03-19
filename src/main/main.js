@@ -295,6 +295,22 @@ function normalizeQuote(rawQuote) {
   };
 }
 
+function getDayDirection(normalizedQuote) {
+  if (!normalizedQuote || normalizedQuote.dayChangeAbs == null) {
+    return "neutral";
+  }
+
+  if (normalizedQuote.dayChangeAbs > 0) {
+    return "up";
+  }
+
+  if (normalizedQuote.dayChangeAbs < 0) {
+    return "down";
+  }
+
+  return "flat";
+}
+
 function evaluateConditions(widget, normalizedQuote) {
   const displayPrice = normalizedQuote && normalizedQuote.displayPrice;
   const dayChangePercent = normalizedQuote && normalizedQuote.dayChangePercent;
@@ -435,6 +451,7 @@ async function pollQuotes() {
       const normalizedQuote = normalizeQuote(rawQuote);
       const previousPrice = runtime.lastDisplayPrice;
       const previousUpdatedAt = runtime.quote ? runtime.quote.updatedAt : null;
+      const isFirstVisibleQuote = runtime.quote == null;
       const hasFreshUpdate = previousUpdatedAt != null && previousUpdatedAt !== normalizedQuote?.updatedAt;
 
       if (!normalizedQuote || normalizedQuote.displayPrice == null) {
@@ -450,47 +467,40 @@ async function pollQuotes() {
 
       runtime.dataState = "ok";
       runtime.errorMessage = null;
-      runtime.quote = normalizedQuote;
-      runtime.dayDirection =
-        normalizedQuote.dayChangeAbs == null
-          ? "neutral"
-          : normalizedQuote.dayChangeAbs > 0
-            ? "up"
-            : normalizedQuote.dayChangeAbs < 0
-              ? "down"
-              : "flat";
-
-      if (previousPrice == null) {
+      if (isFirstVisibleQuote) {
+        runtime.quote = normalizedQuote;
         runtime.priceDirection = "neutral";
-      } else if (normalizedQuote.displayPrice > previousPrice) {
-        runtime.priceDirection = "up";
-        if (hasFreshUpdate) {
+        runtime.dayDirection = getDayDirection(normalizedQuote);
+        runtime.lastDisplayPrice = normalizedQuote.displayPrice;
+        runtime.flashDirection = null;
+        runtime.flashExpiresAt = null;
+      } else if (hasFreshUpdate) {
+        runtime.quote = normalizedQuote;
+        runtime.dayDirection = getDayDirection(normalizedQuote);
+
+        if (previousPrice == null) {
+          runtime.priceDirection = "neutral";
+          runtime.flashDirection = null;
+          runtime.flashExpiresAt = null;
+        } else if (normalizedQuote.displayPrice > previousPrice) {
+          runtime.priceDirection = "up";
           runtime.flashDirection = "up";
           runtime.flashToken += 1;
           runtime.flashExpiresAt = Date.now() + FLASH_DURATION_MS;
-        }
-      } else if (normalizedQuote.displayPrice < previousPrice) {
-        runtime.priceDirection = "down";
-        if (hasFreshUpdate) {
+        } else if (normalizedQuote.displayPrice < previousPrice) {
+          runtime.priceDirection = "down";
           runtime.flashDirection = "down";
           runtime.flashToken += 1;
           runtime.flashExpiresAt = Date.now() + FLASH_DURATION_MS;
-        }
-      } else {
-        runtime.priceDirection = "flat";
-        if (hasFreshUpdate) {
+        } else {
+          runtime.priceDirection = "flat";
           runtime.flashDirection = "flat";
           runtime.flashToken += 1;
           runtime.flashExpiresAt = Date.now() + FLASH_DURATION_MS;
         }
-      }
 
-      if (!hasFreshUpdate) {
-        runtime.flashDirection = null;
-        runtime.flashExpiresAt = null;
+        runtime.lastDisplayPrice = normalizedQuote.displayPrice;
       }
-
-      runtime.lastDisplayPrice = normalizedQuote.displayPrice;
 
       const matches = evaluateConditions(widget, normalizedQuote);
       sendNotifications(widget, normalizedQuote, matches);
