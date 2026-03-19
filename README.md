@@ -1,131 +1,133 @@
 # Finance Poller
 
-Electron 기반의 Windows 트레이 백그라운드 앱입니다. `yahoo-finance2`로 Yahoo Finance 시세를 15초마다 polling하고, 여러 티커를 작은 위젯 형태로 띄워 가격과 일간 변동률을 모니터링합니다.
+Finance Poller is a Windows tray-resident background app built with Electron. It polls Yahoo Finance quotes every 15 seconds through `yahoo-finance2` and shows multiple tickers as compact widgets with live price and daily change data.
 
-## 개요
+## Overview
 
-- 15초 주기로 Yahoo Finance 시세 조회
-- 시스템 트레이 상주
-- 최대 12개 티커 위젯 관리
-- 가격 / 일간 변동률 임계치 알림
-- 창 위치와 위젯 설정을 로컬 파일에 저장
-- 패키징된 앱은 로그인 시 숨김 상태로 자동 실행
+- Polls Yahoo Finance every 15 seconds
+- Runs in the system tray
+- Supports up to 12 ticker widgets
+- Sends alerts for price and daily change thresholds
+- Persists window position and widget settings locally
+- Starts hidden on login when running as a packaged app
 
-## 주요 기능
+## Features
 
-### 시세 표시
+### Quote display
 
-- Yahoo Finance 응답을 받아 현재 표시 가격을 계산합니다.
-- 장전(`PRE`, `PREPRE`)에는 `preMarketPrice`
-- 장후(`POST`, `POSTPOST`)에는 `postMarketPrice`
-- 그 외에는 `regularMarketPrice`
-- 전일 종가 대비 절대값 / 퍼센트 변동도 함께 표시합니다.
+The app normalizes Yahoo Finance quote data and chooses the displayed price based on market state:
 
-### 알림 조건
+- `preMarketPrice` for `PRE` and `PREPRE`
+- `postMarketPrice` for `POST` and `POSTPOST`
+- `regularMarketPrice` otherwise
 
-각 위젯마다 아래 조건을 설정할 수 있습니다.
+It also shows absolute and percentage change versus the previous regular-market close.
+
+### Alert conditions
+
+Each widget can define these threshold rules:
 
 - `priceAbove`
 - `priceBelow`
 - `changePercentAbove`
 - `changePercentBelow`
 
-알림을 켜면 해당 위젯의 조건 입력창은 잠기고, 조건을 만족하는 동안 폴링 시점마다 데스크톱 알림을 보냅니다.
+When alerts are enabled, the threshold inputs are locked for that widget. A desktop notification is sent on polling cycles where one or more enabled conditions match.
 
-### 트레이 동작
+### Tray behavior
 
-- 창의 `_` 버튼은 앱 종료가 아니라 트레이로 숨기기입니다.
-- 트레이 아이콘 클릭으로 창 표시/숨김을 토글합니다.
-- 트레이 메뉴에는 `Open`, `Quit`가 있습니다.
-- 패키징된 앱은 로그인 시 `--hidden` 인자로 실행되도록 설정됩니다.
+- The `_` button hides the window to the tray instead of quitting
+- Clicking the tray icon toggles the window
+- The tray menu provides `Open` and `Quit`
+- Packaged builds register auto-launch with the `--hidden` argument
 
-## 기술 스택
+## Tech stack
 
 - Electron 40
-- yahoo-finance2 3.13.2
-- electron-builder 26
-- 순수 HTML / CSS / JavaScript 렌더러
+- `yahoo-finance2` 3.13.2
+- `electron-builder` 26
+- Plain HTML, CSS, and JavaScript in the renderer
 
-## 실행 방법
+## Getting started
 
-### 요구 사항
+### Requirements
 
 - Node.js
 - npm
 
-### 개발 실행
+### Run in development
 
 ```bash
 npm install
 npm start
 ```
 
-### 코드 체크
+### Check source files
 
-문법 체크만 수행합니다.
+This project includes a syntax-only check script:
 
 ```bash
 npm run check
 ```
 
-### Windows 패키징
+### Build for Windows
 
-설치 없이 실행 가능한 디렉터리 산출물:
+Create an unpacked Windows build:
 
 ```bash
 npm run pack:win
 ```
 
-NSIS 설치 파일 생성:
+Create an NSIS installer:
 
 ```bash
 npm run dist:win
 ```
 
-빌드 결과물은 `dist/` 아래에 생성됩니다. `build/after-pack.js`는 패키징 후 Windows 실행 파일 메타데이터와 아이콘을 보정합니다.
+Build artifacts are written to `dist/`. `build/after-pack.js` adjusts Windows executable metadata and icon resources after packaging.
 
-## 사용 방법
+## Usage
 
-1. 앱 실행 후 `+` 버튼으로 티커를 추가합니다.
-2. 예: `AAPL`, `MSFT`, `005930.KS`, `KRW=X`
-3. 각 카드 오른쪽에서 임계치를 입력합니다.
-4. 벨 버튼으로 알림을 활성화합니다.
-5. 가격이 오르거나 내리면 카드가 잠깐 강조 표시됩니다.
-6. `_` 버튼으로 창을 숨기면 앱은 트레이에서 계속 동작합니다.
+1. Launch the app and click the `+` card to add a ticker.
+2. Examples: `AAPL`, `MSFT`, `005930.KS`, `KRW=X`
+3. Enter alert thresholds in the right side of each widget.
+4. Click the bell button to arm alerts.
+5. Widgets briefly flash when a fresh quote update changes the displayed price.
+6. Hide the window with `_` to keep the app running in the tray.
 
-## 상태 저장
+## State storage
 
-앱 상태는 Electron `userData` 경로의 `state.json`에 저장됩니다.
+Application state is saved to `state.json` under Electron's `userData` directory.
 
-저장 내용:
+Stored data includes:
 
-- 창 위치
-- 등록한 위젯 목록
-- 알림 활성화 여부
-- 각 위젯의 임계치 설정
+- Window position
+- Registered widgets
+- Alert enabled state
+- Per-widget threshold values
 
-## 프로젝트 구조
+## Project structure
 
 ```text
 build/
-  after-pack.js        # Windows 패키징 후처리
+  after-pack.js        # Windows packaging post-process
   icon.ico
   icon.png
 src/
   main/
-    main.js            # 트레이, 윈도우, 폴링, IPC, 알림
+    main.js            # tray, window, polling, IPC, notifications
     preload.js         # renderer <-> main bridge
-    quote-provider.js  # yahoo-finance2 래퍼
-    store.js           # state.json 영속화
+    quote-provider.js  # yahoo-finance2 wrapper
+    store.js           # state.json persistence
   renderer/
-    index.html         # 프레임리스 UI
-    app.js             # 위젯 렌더링/이벤트 처리
-    styles.css         # 전체 스타일
+    index.html         # frameless UI shell
+    app.js             # widget rendering and events
+    styles.css         # app styling
 ```
 
-## 동작 메모
+## Notes
 
-- 싱글 인스턴스 앱입니다. 이미 실행 중이면 기존 창을 다시 보여줍니다.
-- 위젯은 최대 12개까지 추가할 수 있습니다.
-- 폴링이 실패하거나 시세 값이 없으면 카드에 `N/A` 상태가 표시됩니다.
-- 창 위치는 저장되지만 초기 기본 크기(`320x240`)로 다시 맞춰집니다.
+- The app enforces single-instance behavior. Launching it again focuses the existing window.
+- The widget limit is 12.
+- If polling fails or quote data is unavailable, the widget shows `N/A`.
+- Window position is restored, but the initial content size is reset to `320x240`.
